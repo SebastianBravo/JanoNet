@@ -12,6 +12,7 @@ dist/
 # Pesos y checkpoints: nunca en git (se descargan con scripts/download_weights.py)
 weights/*
 !weights/README.md
+!weights/registry.json
 *.ckpt
 *.pt
 *.pth

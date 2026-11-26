@@ -323,3 +323,25 @@ modelos con SRM (clip de 16 cuadros, lote de 4).
 Fuera del port: MLflow (las métricas van a `metrics_epoch.csv`), las predicciones por
 cuadro en parquet y el panel de métricas de monitoreo por época (queda el AP REAL de
 validación y, opcional, el de un subconjunto fijo de train).
+
+---
+
+## 5. Pesos y fichas (Fase 5)
+
+`docs/provenance/export_release.py` extrae de cada checkpoint de §1.5 **solo el
+`state_dict`** en float32 y verifica que carga con `strict=True` y que sus tensores son
+idénticos a los del checkpoint:
+
+| Modelo | Fichero | Bytes | SHA256 |
+|---|---|---|---|
+| `u100` | `u100.pt` | 16 298 206 | `0f55483a0dceb040444339dc17a91292286ce732b6d615aa56272c083dce49c3` |
+| `rs_ca` | `rs_ca.pt` | 65 020 906 | `6db94dff39bf9c821c124a63b8ba314c38b2b9b178bd4de416110b239e5feb88` |
+| `rs_ca_tr` | `rs_ca_tr.pt` | 71 964 331 | `df0f55a6cfa31edae2d5a1ffd84037cc5af875191ed391d4f7ca5ab717fd7659` |
+| `e6` | `e6.pt` | 71 933 905 | `5de40c267b90383137d1169c877ad0777305413aa1cbe42bf1119914d8763297` |
+
+Las fichas `configs/release/<modelo>.json` se calculan con `janonet.release` sobre las
+predicciones de referencia completas: umbrales A y B idénticos a `r2_umbrales.json`; el
+ensamble reproduce AP REAL 0,897 y recall 0,941 en el umbral B (resumen del documento).
+La escalera añade, para cada π ∈ {0,005, 0,01, 0,02, 0,05, 0,10}, los umbrales de
+fricción 3–20 y recall 0,80–0,95 elegidos en validación con su TPR, FPR y fricción en
+validación y en prueba (`analisis2.py:66-80` generalizado a todas las π).

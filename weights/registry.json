@@ -1,0 +1,37 @@
+{
+ "janonet_version": "0.1.0",
+ "models": {
+  "u100": {
+   "file": "u100.pt",
+   "bytes": 16298206,
+   "sha256": "0f55483a0dceb040444339dc17a91292286ce732b6d615aa56272c083dce49c3",
+   "license": "CC BY-NC 4.0 (sujeto a los términos de uso de DFDC, FaceForensics++, DeeperForensics-1.0 y FakeAVCeleb)",
+   "optional": false,
+   "url": ""
+  },
+  "rs_ca": {
+   "file": "rs_ca.pt",
+   "bytes": 65020906,
+   "sha256": "6db94dff39bf9c821c124a63b8ba314c38b2b9b178bd4de416110b239e5feb88",
+   "license": "CC BY-NC 4.0 (sujeto a los términos de uso de DFDC, FaceForensics++, DeeperForensics-1.0 y FakeAVCeleb)",
+   "optional": false,
+   "url": ""
+  },
+  "rs_ca_tr": {
+   "file": "rs_ca_tr.pt",
+   "bytes": 71964331,
+   "sha256": "df0f55a6cfa31edae2d5a1ffd84037cc5af875191ed391d4f7ca5ab717fd7659",
+   "license": "CC BY-NC 4.0 (sujeto a los términos de uso de DFDC, FaceForensics++, DeeperForensics-1.0 y FakeAVCeleb)",
+   "optional": false,
+   "url": ""
+  },
+  "e6": {
+   "file": "e6.pt",
+   "bytes": 71933905,
+   "sha256": "5de40c267b90383137d1169c877ad0777305413aa1cbe42bf1119914d8763297",
+   "license": "CC BY-NC 4.0 (sujeto a los términos de uso de DFDC, FaceForensics++, DeeperForensics-1.0 y FakeAVCeleb)",
+   "optional": true,
+   "url": ""
+  }
+ }
+}
