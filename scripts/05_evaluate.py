@@ -5,8 +5,9 @@
     python scripts/05_evaluate.py --out outputs/evaluation --compare [--no-bootstrap]
 
     # con predicciones propias (salida de 04_predict_split.py), mismas columnas:
-    # config, split, sample_id, score
-    python scripts/05_evaluate.py --predictions outputs/predictions.csv --configs U100 RS-ca RS-ca-tr
+    # config, split, sample_id, score (hacen falta validación, para los umbrales, y prueba)
+    python scripts/05_evaluate.py --predictions outputs/predictions_val.csv outputs/predictions_test.csv \\
+        --configs U100 RS-ca RS-ca-tr
 
 Escribe r2_global, r2_escalera (con fricciones 15 y 20 además de 3–10), r2_prevalencia,
 r2_umbrales.json, r3_* y r4_*, r5_segmentos. Con ``--compare`` imprime la diferencia
@@ -29,7 +30,9 @@ from janonet.eval import study as S
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Tablas de resultados del documento")
-    ap.add_argument("--predictions", type=Path, default=None)
+    ap.add_argument(
+        "--predictions", type=Path, nargs="+", default=None, help="uno o varios CSV (p. ej. validación y prueba)"
+    )
     ap.add_argument("--configs", nargs="+", default=None)
     ap.add_argument("--out", type=Path, default=Path("outputs/evaluation"))
     ap.add_argument("--compare", action="store_true")
@@ -41,7 +44,10 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    preds = pd.read_csv(args.predictions, float_precision="round_trip") if args.predictions else R.load_predictions()
+    if args.predictions:
+        preds = pd.concat([pd.read_csv(f, float_precision="round_trip") for f in args.predictions], ignore_index=True)
+    else:
+        preds = R.load_predictions()
     configs = args.configs or S.STUDY_CONFIGS
     st = S.build_study(preds, R.samples_with_study_method(), configs, allow_subset=args.allow_subset)
     full = set(S.STUDY_CONFIGS) <= set(configs)

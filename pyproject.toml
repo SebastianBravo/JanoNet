@@ -21,7 +21,6 @@ dependencies = [
     "torchvision==0.16.2",
     "pyyaml==6.0.2",
     "pandas==2.2.3",
-    "pyarrow==17.0.0",
     "scipy==1.13.1",
     "scikit-learn==1.7.2",  # 1.5 da otro AP con empates; 1.7 reproduce el documento
     "opencv-python==4.10.0.84",
@@ -33,21 +32,21 @@ preprocess = [
     "tensorflow==2.10.1",
     "retina-face==0.0.17",
     "protobuf==3.19.6",
-    "tqdm==4.67.1",
 ]
-train = [
-    "tqdm==4.67.1",
-]
+# El entrenamiento no necesita nada fuera de las dependencias base; el extra se mantiene
+# para que `pip install -e ".[train]"` siga siendo válido.
+train = []
 app = [
     "janonet[preprocess]",
     # 1.22.0 es la última versión de Streamlit compatible con protobuf 3.19.6,
     # que a su vez exige TensorFlow 2.10 (RetinaFace).
     "streamlit==1.22.0",
-    "matplotlib==3.9.2",
 ]
 dev = [
     "pytest==8.3.3",
     "ruff==0.7.4",
+    # Solo para docs/provenance/ (lee los parquet del repositorio de desarrollo).
+    "pyarrow==17.0.0",
 ]
 
 [tool.setuptools.packages.find]
