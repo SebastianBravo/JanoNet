@@ -1,7 +1,7 @@
 # Equivalente de Makefile para Windows PowerShell.
-# Uso:  .\tasks.ps1 setup | test | test-all | lint | format | sources | faces | split | cache | favc | predict | eval
-# Las tareas de train y app se añaden en sus fases.
-param([Parameter(Position = 0)][string]$Task = "help")
+# Uso:  .\tasks.ps1 setup | test | test-all | lint | format | sources | faces | split | cache | favc | train [-Model rs_ca_tr] | predict | eval
+# La tarea app se añade en la Fase 6.
+param([Parameter(Position = 0)][string]$Task = "help", [string]$Model = "rs_ca_tr")
 
 $ErrorActionPreference = "Stop"
 $py = if ($env:PYTHON) { $env:PYTHON } else { "python" }
@@ -21,8 +21,9 @@ switch ($Task) {
         if ($LASTEXITCODE -eq 0) { & $py scripts/02_preprocess.py faces --videos outputs/fakeavceleb_sources.csv --out manifests/local/fakeavceleb_preprocessing.csv }
         if ($LASTEXITCODE -eq 0) { & $py scripts/01_build_manifest.py split --check --write-local }
     }
+    "train"    { & $py scripts/03_train.py --model $Model --run-dir "runs/$Model" }
     "predict"  { & $py scripts/04_predict_split.py --models u100 rs_ca rs_ca_tr ensemble --split test --out outputs/predictions_test.csv }
     "eval"     { & $py scripts/05_evaluate.py --out outputs/evaluation --compare }
-    default    { Write-Host "Tareas: setup, test, test-all, lint, format, sources, faces, split, cache, favc, predict, eval" }
+    default    { Write-Host "Tareas: setup, test, test-all, lint, format, sources, faces, split, cache, favc, train, predict, eval" }
 }
 exit $LASTEXITCODE

@@ -34,11 +34,16 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=Path("outputs/evaluation"))
     ap.add_argument("--compare", action="store_true")
     ap.add_argument("--no-bootstrap", action="store_true")
+    ap.add_argument(
+        "--allow-subset",
+        action="store_true",
+        help="evaluar solo los videos con predicción (pruebas cortas; no son las cifras del documento)",
+    )
     args = ap.parse_args()
 
     preds = pd.read_csv(args.predictions, float_precision="round_trip") if args.predictions else R.load_predictions()
     configs = args.configs or S.STUDY_CONFIGS
-    st = S.build_study(preds, R.samples_with_study_method(), configs)
+    st = S.build_study(preds, R.samples_with_study_method(), configs, allow_subset=args.allow_subset)
     full = set(S.STUDY_CONFIGS) <= set(configs)
     args.out.mkdir(parents=True, exist_ok=True)
     tables: dict[str, pd.DataFrame] = {}

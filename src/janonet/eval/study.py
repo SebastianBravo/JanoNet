@@ -78,16 +78,28 @@ class Study:
         self.thresholds[name] = dict(A=threshold_max_f1_real(sv, self.val_y), B=threshold_friction(sv, self.val_y, 5.0))
 
 
-def build_study(predictions: pd.DataFrame, samples: pd.DataFrame, configs: list[str] | None = None) -> Study:
-    """``predictions``: ``sample_id, split, config, score``; ``samples``: tabla maestra."""
+def build_study(
+    predictions: pd.DataFrame, samples: pd.DataFrame, configs: list[str] | None = None, allow_subset: bool = False
+) -> Study:
+    """``predictions``: ``sample_id, split, config, score``; ``samples``: tabla maestra.
+
+    Con ``allow_subset`` se evalúa solo sobre los videos que tengan predicción de todas
+    las configuraciones (pruebas cortas); las cifras no son entonces las del documento.
+    """
     configs = configs or STUDY_CONFIGS
     s = samples.set_index("sample_id")
     out = {}
     for split in ("val", "test"):
         ids = np.sort(samples.loc[samples["split"] == split, "sample_id"].to_numpy())
+        if allow_subset:
+            for c in configs:
+                have = predictions.loc[(predictions["config"] == c) & (predictions["split"] == split), "sample_id"]
+                ids = np.intersect1d(ids, have.to_numpy())
         scores = {}
         for c in configs:
             p = predictions[(predictions["config"] == c) & (predictions["split"] == split)].set_index("sample_id")
+            if allow_subset:
+                p = p.loc[p.index.isin(ids)]
             if len(p) != len(ids) or not p.index.isin(ids).all():
                 raise ValueError(f"predicciones incompletas de {c} en {split}: {len(p)} de {len(ids)}")
             # float32: la precisión en que se guardaron y con la que se calcularon las cifras

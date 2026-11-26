@@ -114,10 +114,34 @@ def main() -> int:
     c.add_argument("--samples", type=Path, default=None)
     c.add_argument("--workers", type=int, default=4)
     c.add_argument("--limit", type=int, default=None)
+    s = sub.add_parser("srm-stats", help="media y std del residuo SRM sobre train (configs/srm_stats.json)")
+    s.add_argument("--out", type=Path, default=Path("outputs/srm_stats.json"))
+    s.add_argument("--n-videos", type=int, default=2000)
+    s.add_argument("--frames-per-video", type=int, default=4)
+    s.add_argument("--seed", type=int, default=20260812)
+    s.add_argument("--seed-check", type=int, default=1337)
     args = ap.parse_args()
     if args.stage == "faces":
         return stage_faces(args.videos, args.out, args.limit)
+    if args.stage == "srm-stats":
+        return stage_srm_stats(args)
     return stage_cache(args.samples, args.workers, args.limit)
+
+
+def stage_srm_stats(args) -> int:
+    import json
+
+    from janonet.data import srm_stats
+
+    samples = M.read_samples()
+    train = samples[samples["split"] == "train"]
+    stats = srm_stats.compute(
+        train, config.output_dir("cache"), args.n_videos, args.frames_per_video, args.seed, args.seed_check
+    )
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(stats, indent=2), encoding="utf-8")
+    print(f"mean {stats['mean']}\nstd  {stats['std']}\ncontrol: {stats['convergence_check']}\n-> {args.out}")
+    return 0
 
 
 if __name__ == "__main__":

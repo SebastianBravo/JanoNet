@@ -1,8 +1,8 @@
 # Atajos para Linux/macOS. En Windows: tasks.ps1 (mismos nombres).
-# Las tareas de train y app se añaden en sus fases.
+# La tarea app se añade en la Fase 6.
 PY ?= python
 
-.PHONY: setup test test-all lint format sources faces split cache favc predict eval
+.PHONY: setup test test-all lint format sources faces split cache favc train predict eval
 
 setup:
 	$(PY) -m pip install -e ".[preprocess,train,dev]"
@@ -39,6 +39,11 @@ favc:
 	$(PY) scripts/01_build_manifest.py sources --datasets fakeavceleb --out outputs/fakeavceleb_sources.csv
 	$(PY) scripts/02_preprocess.py faces --videos outputs/fakeavceleb_sources.csv --out manifests/local/fakeavceleb_preprocessing.csv
 	$(PY) scripts/01_build_manifest.py split --check --write-local
+
+# Entrenamiento (Fase 4). make train MODEL=rs_ca_tr
+MODEL ?= rs_ca_tr
+train:
+	$(PY) scripts/03_train.py --model $(MODEL) --run-dir runs/$(MODEL)
 
 # Evaluación (Fase 3). MODELS=u100 rs_ca rs_ca_tr ensemble
 MODELS ?= u100 rs_ca rs_ca_tr ensemble

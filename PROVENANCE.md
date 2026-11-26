@@ -286,3 +286,40 @@ satura. Diferencia 0, sin cambios de decisión. El ensamble sobre ellos difiere 
 
 Tiempo en CPU (Windows, i7-6700, 4 núcleos): 0,54 s/video U100 y ~1,0 s/video los
 modelos con SRM (clip de 16 cuadros, lote de 4).
+
+---
+
+## 4. Entrenamiento (Fase 4)
+
+| Valor | Origen |
+|---|---|
+| AdamW sobre los parámetros entrenables, sin programador de tasa | `DEV/scripts/04_train.py:449-452` (`scheduler=None`, `:519`) |
+| `BCEWithLogitsLoss(pos_weight = alpha · n_REAL/n_FAKE)` del train efectivo | `DEV/scripts/04_train.py:431-446`; `DEV/src/tfm/models/assemble.py:149-181` |
+| Pérdida: media de 16 BCE (`mean`) o una BCE del logit de video (`transformer`) | `DEV/src/tfm/train/loop.py:177-186` |
+| AMP float16 + `torch.cuda.amp.GradScaler`; acumulación con pérdida / `accum_steps` | `DEV/src/tfm/train/loop.py:65-82,732-760` |
+| `torch.manual_seed(seed)` antes de construir el modelo | `DEV/scripts/04_train.py:423` |
+| Ventana de train `derive_seed(seed, época, sample_id) % 17`; permutación por época `default_rng(derive_seed(seed, época))` | `DEV/src/tfm/data/dataset.py:95-106`; `DEV/src/tfm/data/sampler.py:75-88` |
+| `drop_last=True`; val en orden natural, clip central | `DEV/scripts/04_train.py:275-283` |
+| `best.ckpt` = máximo AP REAL de validación con el puntaje oficial | `DEV/src/tfm/train/loop.py:835-856` |
+| Subconjunto de train para la curva de sobreajuste (`train_eval_subset: 9000`) | `DEV/scripts/04_train.py:263-271` |
+| Estadísticas SRM: 2000 × 4 cuadros, semillas 20260812 y 1337 | `DEV/scripts/03b_compute_srm_stats.py` |
+| Tiempos y memoria por modelo (README) | `metrics_epoch.csv` de cada run (`epoch_seconds`, `vram_peak_mb`); reloj total con evaluación: `DEV/CLAUDE.md`, «Semillas de la RGB ajustada §0» |
+
+**Verificado:**
+
+- Orden de datos idéntico al original: la permutación de la época 0 y la 3 con la semilla
+  20260910 y los subconjuntos estratificados de 128 y 9000 videos coinciden por hash
+  (`tests/test_train.py`).
+- `pos_weight` del train completo = 0,174601939329795, el de los `run_manifest.json`.
+- `02_preprocess.py srm-stats` recalcula `configs/srm_stats.json` desde la caché con la
+  misma muestra (mismo solape de 58 videos entre semillas y mismos 401 408 000 píxeles
+  por canal): diferencia relativa en la desviación ≤ 2,5e-8 (orden de suma CPU/GPU).
+- Reanudación bit a bit, también cortando **a mitad de un ciclo de acumulación** con
+  dropout activo (`tests/test_train.py`). Dos cambios frente al original para lograrlo
+  sin depender de que el modelo no tenga dropout: cada `DataLoader` lleva su propio
+  generador (crear el iterador consumía el RNG global) y, al guardar a mitad de ciclo, se
+  guarda el estado del RNG del inicio del ciclo, que es adonde se rebobina.
+
+Fuera del port: MLflow (las métricas van a `metrics_epoch.csv`), las predicciones por
+cuadro en parquet y el panel de métricas de monitoreo por época (queda el AP REAL de
+validación y, opcional, el de un subconjunto fijo de train).
