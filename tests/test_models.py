@@ -97,7 +97,7 @@ def test_logit_acotado_con_eps():
 def test_ensamble_es_media_de_logits():
     a = np.array([0.9, 0.2, 1.0])
     b = np.array([0.6, 0.1, 0.5])
-    np.testing.assert_allclose(ensemble_logit([a, b]), (logit(a) + logit(b)) / 2)
+    np.testing.assert_allclose(ensemble_logit([a, b]), (logit(a) + logit(b)) / 2, rtol=1e-12)
     s = ensemble_score([a, b])
     assert np.all((s > 0) & (s < 1))
     with pytest.raises(ValueError):

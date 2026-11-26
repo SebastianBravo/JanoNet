@@ -25,6 +25,7 @@ weights/*
 /runs/
 # Filas de FakeAVCeleb de los manifiestos (sus términos prohíben distribuir datos derivados)
 manifests/local/
+reference/local/
 *.bin
 *.parquet
 examples/*

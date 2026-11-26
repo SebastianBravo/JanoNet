@@ -194,3 +194,95 @@ cuadros de la ventana con la caché del estudio:
 - Las magnitudes del manifiesto (cuadros procesados, tamaños de caja y de recorte,
   acción de redimensionado, contadores y veredicto de limpieza) coinciden en los 20.
 - Detalle por video: `outputs/parity_preprocess.json` (fuera de git).
+
+---
+
+## 3. Evaluación (Fase 3)
+
+### 3.1 Definiciones (`src/janonet/eval/operating.py`)
+
+Las del documento v12, tomadas de `DOC/scripts/analisis2.py` (sha256 del zip
+`d0cc7f6e…2d2e2`):
+
+| Valor | Origen |
+|---|---|
+| π = 0,02; fricción = 1 + (1 − π)/π · FPR/TPR | `analisis2.py:10-11` |
+| Umbral B = menor umbral de validación con fricción ≤ 5 a π = 0,02, **sin** el factor 1,173 | `analisis2.py:12-24` (el desarrollo usaba `t_fric5_comp`, con factor: no se porta) |
+| Umbral A = máximo F1 REAL sobre 2001 cuantiles del puntaje de validación | `analisis2.py:25-32` (distinto del `threshold.json` del desarrollo, que barría todos los puntajes) |
+| Escalera: fricción 3, 4, 5, 6, 8, 10 (+15 y 20) y recall 0,80, 0,85, 0,90, 0,95 | `analisis2.py:68-72`; 15 y 20 de `EXP/escalera_operacion.csv` |
+| Métricas productivas (precisión, F1 y alertas reponderadas a π) | `analisis2.py:36-42` |
+| IC de Clopper–Pearson | `analisis2.py:33-35` |
+| Sensibilidad a π ∈ {0,005, 0,01, 0,02, 0,05, 0,10} | `analisis2.py:76-80` |
+| Bootstrap por video (estratificado) y por grupo (`group_id`), 1000 réplicas, semilla 7 | `analisis3.py:4,16-27`; `analisis4.py:14-27` |
+| Ensamble: media de logits con ε = 1e-6, en float32 | `analisis3.py:109-113`; `analisis4.py:3-7` |
+
+### 3.2 Predicciones de referencia (`reference/`)
+
+`reference/predictions.csv.gz` sale de `EXP/predicciones_por_video.parquet` (la
+`pv.parquet` de los scripts) con `docs/provenance/export_dev_predictions.py`: semilla
+20260910, 13 configuraciones, validación y prueba, columna `score_oficial` (en E4–E6 es
+la salida por video reinferida, `prob_video_reinferido`). Las filas de FakeAVCeleb van a
+`reference/local/` (fuera de git). `reference/document/` son los CSV agregados del zip,
+copiados sin cambios.
+
+### 3.3 Detalles que hacen falta para la paridad exacta
+
+- **Los puntajes son float32.** La tabla del estudio los guardaba en float32 y el
+  documento calculó `1 − s` (AP REAL) y el ensamble en esa precisión. Con float64 el AP
+  REAL de U100 cambia en 1,5e-7 por los empates en 1,0 (videos saturados).
+- **scikit-learn 1.7.2.** Con la 1.5.2 el AP con empates difiere (1,5e-7 en U100); la 1.7
+  reproduce el documento. Funciona con numpy 1.26.
+- **`thA`/`thB` de `r2_global.csv` están redondeados a float32** en el CSV del documento;
+  los valores completos son los de `r2_umbrales.json`, que coinciden bit a bit.
+- **Método de FakeAVCeleb.** El documento asignó el método cruzando `meta_data.csv` sin
+  el tipo de video, y en 15 videos limpios (3 en prueba) un nombre repetido en
+  `FakeVideo-FakeAudio` le dio `faceswap-wav2lip` a videos que en
+  `FakeVideo-RealAudio` son `wav2lip`. El manifiesto guarda el método correcto; la regla
+  del documento se reproduce solo para la paridad (`sources.fakeavceleb_method_study`,
+  `manifests/local/fakeavceleb_method_study.csv.gz`). Afecta a dos filas de
+  `r5_segmentos.csv` (`FAVC faceswap-wav2lip`, n = 3, y `FAVC wav2lip`).
+
+### 3.4 Resultado de la paridad
+
+Con `scripts/05_evaluate.py --compare` (y `tests/test_eval_parity.py`):
+
+| Tabla | Filas | Diferencia máxima |
+|---|---|---|
+| r2_global, r2_escalera, r2_prevalencia, r2_umbrales | 13 / 130 / 30 / 13 | ≤ 1,0e-15 (umbrales idénticos) |
+| r3_subsets, r3_macro, r3_demografia, r3_fps, r3_errores | 56 / 8 / 14 / 6 / 5 | ≤ 1,1e-16 |
+| r5_segmentos | 120 | 3,3e-16 |
+| r3_boot (bootstrap por video y por grupo) | 160 | 2,2e-16 |
+| r4_point, r4_ci (ensamble, π = 0,005 y 0,02) | 12 / 24 | 1,8e-15 |
+
+Las diferencias son de redondeo de coma flotante (orden de suma y versión de scipy en
+los IC binomiales): los intervalos bootstrap son exactos porque se respetan la semilla
+y el orden de llamadas al generador.
+
+### 3.5 Reinferencia con el pipeline nuevo (CPU, float32)
+
+`scripts/04_predict_split.py` + `scripts/compare_predictions.py` sobre 353 videos de
+prueba: 200 al azar (semilla 20261126) y los 156 en que el `prob_mean` guardado de U100
+valía exactamente 1,0 (3 en común). Checkpoints de §1.5, clip central de la caché.
+
+**Hallazgo: la rama SRM depende de la precisión con que se calculó el residuo.** Los
+modelos se entrenaron y evaluaron con AMP (`run_manifest.json`, `amp: true`), así que la
+convolución SRM corría en float16. En float32 puro, los modelos con SRM se alejan mucho
+de sus puntajes publicados; redondeando a float16 solo la entrada, los pesos y la
+respuesta del banco SRM (`srm.residual_precision: float16`, ver `models/srm.py`), la
+diferencia cae al orden de la que deja el resto de AMP. En GPU con `autocast` fp16 la
+diferencia es ≤ 0,001 en los cuatro modelos (60 videos, GTX 1080).
+
+| Modelo | float32 puro: máx / media | residuo SRM en float16: máx / media / p99 | Decisiones distintas en B |
+|---|---|---|---|
+| U100 | 0,012 / 0,0005 | 0,012 / 0,0005 / 0,0072 | 0 |
+| RS-ca | 0,189 / 0,019 | 0,0036 / 0,0004 / 0,0028 | 0 (4 en float32) |
+| RS-ca-tr | 0,257 / 0,024 | 0,018 / 0,0015 / 0,016 | 0 (6 en float32) |
+| E6 | 0,761 / 0,087 | 0,020 / 0,0008 / 0,0080 | 0 (18 en float32) |
+| Ensamble | 0,253 / 0,013 | 0,008 / 0,0007 / 0,0066 | 0 (3 en float32) |
+
+**Videos saturados de U100.** Los 156 videos con `prob_mean = 1,0` guardado también dan
+1,0 en float32: sus 16 logits por cuadro superan 16,6, donde la sigmoide float32 también
+satura. Diferencia 0, sin cambios de decisión. El ensamble sobre ellos difiere ≤ 8e-6.
+
+Tiempo en CPU (Windows, i7-6700, 4 núcleos): 0,54 s/video U100 y ~1,0 s/video los
+modelos con SRM (clip de 16 cuadros, lote de 4).

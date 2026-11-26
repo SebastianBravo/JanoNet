@@ -189,6 +189,38 @@ def load_fakeavceleb_metadata(meta_csv: Path) -> pd.DataFrame:
     return md[["video_id", "method", "category", "type", "race", "gender"]].drop_duplicates("video_id")
 
 
+def fakeavceleb_method_study(meta_csv: Path, video_ids: Iterable[str]) -> pd.Series:
+    """Método de FakeAVCeleb tal como lo asignaron las tablas del documento.
+
+    El documento cruzó ``meta_data.csv`` por (carpeta ``idNNNNN``, nombre de fichero),
+    sin el tipo, y se quedó con la primera fila coherente con la etiqueta. Un mismo
+    nombre aparece a veces en ``FakeVideo-FakeAudio`` y ``FakeVideo-RealAudio`` con
+    métodos distintos, y entonces gana el de ``FakeVideo-FakeAudio`` (p. ej.
+    ``faceswap-wav2lip`` donde el video usado es ``wav2lip``). Se reproduce solo para
+    la paridad de las tablas; el método correcto del video es el de
+    ``load_fakeavceleb_metadata``.
+
+    Origen: ``dataset_analysis/export_resultados/scripts/01_tabla_maestra.py:68-96``.
+    """
+    md = pd.read_csv(meta_csv)
+    md = md.rename(columns={md.columns[9]: "dir", "path": "filename"})
+    md["idp"] = md["dir"].str.split("/").str[-1]
+    md["es_real_video"] = md["type"].str.startswith("RealVideo")
+    f = pd.DataFrame({"video_id": list(video_ids)})
+    parts = f["video_id"].str.split("/")
+    f["idp"], f["fn"] = parts.str[-2], parts.str[-1]
+    f["is_real"] = parts.str[1] == "RealVideo-RealAudio"
+    k = f.merge(
+        md[["idp", "filename", "method", "es_real_video"]],
+        left_on=["idp", "fn"],
+        right_on=["idp", "filename"],
+        how="left",
+    )
+    k = k[(k["is_real"] == k["es_real_video"]) | k["method"].isna()]
+    k = k.drop_duplicates("video_id", keep="first")
+    return k.set_index("video_id")["method"].reindex(f["video_id"])
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Localización en disco
 # ─────────────────────────────────────────────────────────────────────────────

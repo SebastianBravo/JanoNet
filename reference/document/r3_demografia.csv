@@ -1,0 +1,15 @@
+cfg,var,grupo,nF,nR,tpr,fp
+U100,favc_etnia,African,106,5,0.9905660377358491,1
+U100,favc_etnia,Asian (East),190,12,0.9789473684210527,2
+U100,favc_etnia,Asian (South),123,5,0.983739837398374,0
+U100,favc_etnia,Caucasian (American),78,2,0.9743589743589743,0
+U100,favc_etnia,Caucasian (European),55,2,0.9636363636363636,0
+U100,favc_genero,men,264,12,0.9696969696969697,0
+U100,favc_genero,women,288,14,0.9895833333333334,3
+RS-ca-tr,favc_etnia,African,106,5,0.8679245283018868,1
+RS-ca-tr,favc_etnia,Asian (East),190,12,0.9631578947368421,2
+RS-ca-tr,favc_etnia,Asian (South),123,5,0.943089430894309,0
+RS-ca-tr,favc_etnia,Caucasian (American),78,2,0.9871794871794872,0
+RS-ca-tr,favc_etnia,Caucasian (European),55,2,0.8,0
+RS-ca-tr,favc_genero,men,264,12,0.9090909090909091,0
+RS-ca-tr,favc_genero,women,288,14,0.9444444444444444,3

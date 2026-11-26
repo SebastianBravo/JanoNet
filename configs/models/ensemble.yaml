@@ -4,6 +4,7 @@
 meta:
   name: ensemble
   display_name: "Ensamble RGB sola + completo"
+  study_config: ENS
   official_score: prob_ensemble
 
 ensemble:

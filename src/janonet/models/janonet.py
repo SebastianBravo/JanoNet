@@ -129,7 +129,12 @@ def build_model(
         padding_mode = srm_cfg.get("padding_mode", DEFAULT_SRM_PADDING_MODE)
         stats = load_srm_stats(srm_stats_path or paths.srm_stats_path())
         check_padding_mode(padding_mode, stats)
-        srm_residual = SRMResidual(mean=stats["mean"], std=stats["std"], padding_mode=padding_mode)
+        srm_residual = SRMResidual(
+            mean=stats["mean"],
+            std=stats["std"],
+            padding_mode=padding_mode,
+            residual_precision=srm_cfg.get("residual_precision", "float32"),
+        )
         srm_backbone = SRMBackbone(
             stem_stride=srm_cfg.get("stem_stride", 2),
             use_maxpool=srm_cfg.get("use_maxpool", True),

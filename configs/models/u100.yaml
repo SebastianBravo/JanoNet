@@ -5,6 +5,7 @@ meta:
   name: u100
   display_name: "RGB sola (U100)"
   source_run: U100-s20260910
+  study_config: U100               # nombre en las tablas del documento
   official_score: prob_mean       # temporal: mean -> media de las 16 probabilidades
 
 model:

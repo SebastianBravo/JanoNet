@@ -106,12 +106,22 @@ def load_srm_stats(path: str | Path) -> dict[str, Any]:
     return stats
 
 
+RESIDUAL_PRECISIONS = ("float32", "float16")
+
+
 class SRMResidual(nn.Module):
     """Capa fija: residuo SRM normalizado.
 
     Pesos, media y std van como *buffers* no persistentes: no se entrenan y **no**
     están en el ``state_dict`` (igual que en el modelo que se entrenó), así que la
     carga con ``strict=True`` no los espera.
+
+    ``residual_precision="float16"`` redondea la entrada, los pesos y la respuesta del
+    banco a float16, que es lo que hacía la convolución bajo AMP con la que se
+    entrenaron y evaluaron los modelos finales. La rama SRM es muy sensible a ese
+    redondeo (el residuo vive en ~1e-2): calculado en float32, RS-ca-tr se aleja hasta
+    0,26 de sus puntajes publicados y E6 hasta 0,76; con el redondeo, menos de 0,01.
+    El redondeo es idempotente, así que bajo AMP en GPU no cambia nada.
     """
 
     def __init__(
@@ -120,13 +130,17 @@ class SRMResidual(nn.Module):
         std: tuple[float, ...] | list[float] | None = None,
         dtype: torch.dtype = torch.float32,
         padding_mode: str = DEFAULT_SRM_PADDING_MODE,
+        residual_precision: str = "float32",
     ):
         super().__init__()
         if padding_mode not in SRM_PADDING_MODES:
             raise ValueError(f"padding_mode debe ser uno de {SRM_PADDING_MODES}, llegó {padding_mode!r}")
+        if residual_precision not in RESIDUAL_PRECISIONS:
+            raise ValueError(f"residual_precision debe ser uno de {RESIDUAL_PRECISIONS}, llegó {residual_precision!r}")
         if (mean is None) != (std is None):
             raise ValueError("mean y std deben darse juntos o ninguno de los dos")
         self.padding_mode = padding_mode
+        self.residual_precision = residual_precision
         self.register_buffer("weight", srm_filter_bank(dtype), persistent=False)
         self.is_normalized = mean is not None
         if self.is_normalized:
@@ -148,13 +162,20 @@ class SRMResidual(nn.Module):
 
     def raw(self, x: torch.Tensor) -> torch.Tensor:
         """Respuesta cruda de los 3 kernels (sin normalizar)."""
+        if self.residual_precision == "float16":
+            dt = x.dtype
+            r = apply_srm(x.half().to(dt), self.weight.half().to(dt), self.padding_mode)
+            return r.half().to(dt)
         return apply_srm(x, self.weight, self.padding_mode)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return (self.raw(x) - self.mean) / self.std
 
     def extra_repr(self) -> str:
-        return f"n_kernels={SRM_N_KERNELS}, normalized={self.is_normalized}, padding_mode={self.padding_mode!r}"
+        return (
+            f"n_kernels={SRM_N_KERNELS}, normalized={self.is_normalized}, padding_mode={self.padding_mode!r}, "
+            f"residual_precision={self.residual_precision!r}"
+        )
 
 
 def check_padding_mode(config_padding_mode: str, stats: dict) -> None:

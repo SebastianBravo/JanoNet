@@ -23,6 +23,9 @@ def test_salidas_identicas_al_modelo_original(name, dev_repo, checkpoint_for):
     from tfm.models.assemble import build_model as dev_build_model
 
     cfg = model_cfg(name)["model"]
+    if "srm" in cfg:
+        # El original calcula el residuo en la precisión de la entrada (float32 aquí).
+        cfg = {**cfg, "srm": {**cfg["srm"], "residual_precision": "float32"}}
     sd = load_state_dict_from_checkpoint(checkpoint_for(name))
 
     dev_cfg = {k: v for k, v in cfg.items()}

@@ -88,3 +88,17 @@ def test_kernels_iguales_al_modulo_original(dev_repo):
 
     np.testing.assert_array_equal(S.srm_kernels(), dev_srm.srm_kernels())
     torch.testing.assert_close(S.srm_filter_bank(), dev_srm.srm_filter_bank(), rtol=0, atol=0)
+
+
+def test_residuo_en_float16_como_bajo_amp():
+    """El redondeo a float16 cambia el residuo, es idempotente y deja la salida en float32."""
+    x = torch.rand(1, 3, 64, 64, generator=torch.Generator().manual_seed(3))
+    a = S.SRMResidual.from_stats_file(paths.srm_stats_path())
+    b = S.SRMResidual.from_stats_file(paths.srm_stats_path(), residual_precision="float16")
+    rb = b.raw(x)
+    assert rb.dtype == torch.float32
+    assert not torch.equal(a.raw(x), rb)
+    torch.testing.assert_close(rb, rb.half().float(), rtol=0, atol=0)
+    torch.testing.assert_close(b.raw(x.half().float()), rb, rtol=0, atol=0)
+    with pytest.raises(ValueError):
+        S.SRMResidual(residual_precision="bfloat16")

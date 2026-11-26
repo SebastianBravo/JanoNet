@@ -9,6 +9,7 @@ meta:
   name: e6
   display_name: "E6 (RGB congelada al 10,3 %)"
   source_run: E6-seed20260910
+  study_config: E6               # nombre en las tablas del documento
   official_score: prob_video
 
 model:
@@ -24,6 +25,9 @@ model:
     use_maxpool: true
     grid_adjust: stride
     padding_mode: replicate
+    # Residuo redondeado a float16, como lo vio la red al entrenar y evaluar con AMP.
+    # Sin esto, en float32 los puntajes se alejan hasta 0,26 (0,76 en E6) de los publicados.
+    residual_precision: float16
   fusion_params:
     d_model: 256
     n_heads: 8

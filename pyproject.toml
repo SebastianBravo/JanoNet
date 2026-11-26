@@ -23,7 +23,7 @@ dependencies = [
     "pandas==2.2.3",
     "pyarrow==17.0.0",
     "scipy==1.13.1",
-    "scikit-learn==1.5.2",
+    "scikit-learn==1.7.2",  # 1.5 da otro AP con empates; 1.7 reproduce el documento
     "opencv-python==4.10.0.84",
 ]
 

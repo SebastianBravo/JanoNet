@@ -1,8 +1,8 @@
 # Atajos para Linux/macOS. En Windows: tasks.ps1 (mismos nombres).
-# Las tareas de train, eval y app se añaden en sus fases.
+# Las tareas de train y app se añaden en sus fases.
 PY ?= python
 
-.PHONY: setup test test-all lint format sources faces split cache favc
+.PHONY: setup test test-all lint format sources faces split cache favc predict eval
 
 setup:
 	$(PY) -m pip install -e ".[preprocess,train,dev]"
@@ -39,3 +39,11 @@ favc:
 	$(PY) scripts/01_build_manifest.py sources --datasets fakeavceleb --out outputs/fakeavceleb_sources.csv
 	$(PY) scripts/02_preprocess.py faces --videos outputs/fakeavceleb_sources.csv --out manifests/local/fakeavceleb_preprocessing.csv
 	$(PY) scripts/01_build_manifest.py split --check --write-local
+
+# Evaluación (Fase 3). MODELS=u100 rs_ca rs_ca_tr ensemble
+MODELS ?= u100 rs_ca rs_ca_tr ensemble
+predict:
+	$(PY) scripts/04_predict_split.py --models $(MODELS) --split test --out outputs/predictions_test.csv
+
+eval:
+	$(PY) scripts/05_evaluate.py --out outputs/evaluation --compare
