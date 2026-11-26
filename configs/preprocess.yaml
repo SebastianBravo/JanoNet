@@ -1,0 +1,38 @@
+# Preprocesamiento facial: detección, reglas de limpieza, recorte y redimensionado.
+# Valores que corrieron para los 140 423 videos (columnas param_* de los cuatro
+# manifiestos, constantes en todas las filas) y constantes fijas del script
+# deepfake_detection/code/preprocess_v2.py. Ver PROVENANCE.md §2.
+
+detector:
+  name: retinaface               # retina-face 0.0.17 sobre TensorFlow 2.10
+  score_threshold: 0.9           # FaceDetector(threshold=0.9)
+  min_face_size: 60              # lado menor de la caja en px
+  detect_every: 5                # se detecta cada 5 cuadros; entre medias se reutiliza la última detección válida
+
+frontal:
+  threshold: 0.18                # puntaje geométrico de 5 puntos; menor = más frontal
+  landmark_smoothing_alpha: 0.7  # EMA de los puntos; solo afecta al criterio de frontalidad, no al recorte
+
+cleaning:                        # reglas por video
+  min_valid_fraction: 0.95       # fracción mínima de cuadros revisados con exactamente un rostro
+  max_missing_face_frames: 0     # cualquier cuadro revisado sin rostro descarta el video
+  max_too_many_faces_fraction: 0.05   # fracción máxima de cuadros revisados con >= 2 rostros
+  max_nonfrontal_fraction: 0.20  # fracción máxima de cuadros válidos no frontales
+
+crop:
+  margin: 0.0                    # recorte cuadrado de lado max(ancho, alto) de la caja
+  center_shift_y: 0.05           # el centro baja 0,05 x lado (equilibrio frente/mentón)
+  align_faces: false             # sin alineación por rotación
+
+resize:
+  size: 224
+  interpolation: cubic           # cv2.INTER_CUBIC
+
+video:
+  codec: mp4v                    # el video procesado se reescribe con este códec; la caché sale de él
+
+cache:
+  n_frames: 32                   # cuadros consecutivos guardados por video
+  stride: 1
+  clip_len: 16                   # cuadros por clip que entran a la red
+  eval_offset: 8                 # clip central: cuadros 8..23 de los 32

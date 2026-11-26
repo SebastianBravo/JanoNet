@@ -17,11 +17,14 @@ weights/*
 *.pth
 *.h5
 
-# Datos y medios: solo manifiestos sin medios van en git
-data/
-cache/
-outputs/
-runs/
+# Datos y medios: solo manifiestos sin medios van en git.
+# Anclados a la raíz: un "data/" sin barra inicial ignoraría también src/janonet/data/.
+/data/
+/cache/
+/outputs/
+/runs/
+# Filas de FakeAVCeleb de los manifiestos (sus términos prohíben distribuir datos derivados)
+manifests/local/
 *.bin
 *.parquet
 examples/*

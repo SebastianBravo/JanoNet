@@ -1,0 +1,37 @@
+# Datasets, rutas y partición por identidad. Ver DATA.md y PROVENANCE.md §2.
+#
+# Rutas: nada absoluto. Cada dataset se busca en la variable de entorno indicada o,
+# si no está definida, en <JANONET_DATA>/<default_dir>.
+
+roots:
+  dfdc:            {env: JANONET_DFDC_ROOT, default_dir: dfdc}
+  ffpp:            {env: JANONET_FFPP_ROOT, default_dir: ffpp}
+  deeperforensics: {env: JANONET_DF_ROOT,   default_dir: deeperforensics}
+  fakeavceleb:     {env: JANONET_FAVC_ROOT, default_dir: fakeavceleb}
+
+# Salidas intermedias (fuera de git).
+outputs:
+  processed: {env: JANONET_PROCESSED, default_dir: processed}   # videos de rostro 224x224 (mp4v)
+  cache:     {env: JANONET_CACHE,     default_dir: frames_cache} # 32 cuadros por video (.bin)
+
+# Subconjuntos usados. FF++ se usa en c23; sus originales entran como REAL bajo la
+# etiqueta de dataset "deeper-forensics" (son los videos objetivo de DeeperForensics-1.0).
+subsets:
+  ffpp_methods: [DeepFakeDetection, Deepfakes, Face2Face, FaceShifter, FaceSwap, NeuralTextures]
+  ffpp_compression: c23
+  deeperforensics_variants: [end_to_end, reenact_postprocess]
+  fakeavceleb_types: {FakeVideo-RealAudio: FAKE, RealVideo-RealAudio: REAL}
+  dfdc_parts: all                # dfdc_train_part_00 .. dfdc_train_part_49
+
+split:
+  seed: 42
+  fractions: {train: 0.80, val: 0.10, test: 0.10}
+  pool_column: meets_the_clean_rules
+  dfdc_granularity: part         # grupo de identidad de DFDC = la parte del dataset
+  force_dfd_blocks_apart: true   # los 3 bloques de actores de DeepFakeDetection: mayor a train, los otros a val y test
+  refine_max_passes: 40
+
+# Derivadas de la tabla maestra.
+samples:
+  resize_bucket_edges: [-100, -50, -25, -10, 0, 10, 25, 50, 100, 250]
+  duration_bucket_edges: [0.0, 0.35, 0.55, 0.70, 0.90, .inf]

@@ -57,7 +57,9 @@ where = ["src"]
 testpaths = ["tests"]
 markers = [
     "dev_parity: compara contra el repositorio de desarrollo (necesita JANONET_DEV_REPO)",
-    "checkpoints: carga los checkpoints reales (necesita JANONET_DEV_CHECKPOINTS o weights/)",
+    "checkpoints: carga los checkpoints reales (necesita JANONET_CHECKPOINTS o weights/)",
+    "slow: lento (RetinaFace en CPU, entrenamiento corto); se excluye con -m 'not slow'",
+    "parity: compara contra artefactos del estudio (caché, predicciones guardadas)",
 ]
 
 [tool.ruff]

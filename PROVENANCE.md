@@ -110,3 +110,87 @@ a los del código original (`tests/test_srm.py`).
 
 Son checkpoints de entrenamiento (modelo + optimizador + RNG). El `state_dict` va en la
 clave `model`. Los pesos publicados (Fase 5) llevarán solo el `state_dict`.
+
+---
+
+## 2. Datos y preprocesamiento (Fase 2)
+
+### 2.1 Parámetros del preprocesamiento (`configs/preprocess.yaml`)
+
+Los parámetros configurables salen de las columnas `param_*` de los cuatro manifiestos
+de preprocesamiento (`DEV/data/raw/manifest_*_no_align_margin_0_0_resize_224.csv`),
+**constantes en las 140 423 filas**; las constantes fijas, de `PRE/code/preprocess_v2.py`.
+
+| Valor | Origen |
+|---|---|
+| `resize.size = 224`, `crop.margin = 0.0`, `detector.detect_every = 5`, `detector.min_face_size = 60`, `frontal.threshold = 0.18`, `cleaning.min_valid_fraction = 0.95`, `cleaning.max_nonfrontal_fraction = 0.20`, `crop.align_faces = false`, `video.codec = mp4v` | columnas `param_*` del manifiesto (ver también `PRE/commands/preprocess-command.example.txt`) |
+| `detector.score_threshold = 0.9` | `PRE/code/preprocess_v2.py:354` |
+| detección cada `detect_every` cuadros o mientras no haya detección válida | `PRE/code/preprocess_v2.py:519-552` |
+| `frontal.landmark_smoothing_alpha = 0.7` (solo para la frontalidad) | `PRE/code/preprocess_v2.py:541-550` |
+| puntaje de frontalidad (pesos 0.45 / 0.35 / 0.10 / 0.10) | `PRE/code/preprocess_v2.py:298-346` |
+| `crop.center_shift_y = 0.05` | `PRE/code/preprocess_v2.py:265` |
+| recorte con la caja sin suavizar de la última detección válida | `PRE/code/preprocess_v2.py:559-601` |
+| `resize.interpolation = cubic` | `PRE/code/preprocess_v2.py:637-643` |
+| `cleaning.max_too_many_faces_fraction = 0.05` | `PRE/code/preprocess_v2.py:697` |
+| `cleaning.max_missing_face_frames = 0` | `PRE/code/preprocess_v2.py:704` |
+| caché: 32 cuadros, `window_start = (processed_frames - 32) // 2` | `DEV/src/tfm/data/samples.py:52,422-435` |
+| formato `.bin` (cabecera de 32 B `TFMF`, payload RGB uint8) | `DEV/src/tfm/data/binstore.py:1-65` |
+| decodificación BGR→RGB, sin `CAP_PROP_POS_FRAMES` | `DEV/src/tfm/data/binstore.py:373-418` |
+| clip de 16 cuadros, ventana central offset 8, offset de train `derive_seed(seed, época, sample_id)` (splitmix64) | `DEV/src/tfm/data/dataset.py:32-106` |
+
+Verificación: las reglas portadas reproducen **el veredicto y el mensaje** de limpieza
+de las 140 423 filas del manifiesto (`tests/test_data.py`).
+
+### 2.2 Fuentes, etiquetas y métodos
+
+| Valor | Origen |
+|---|---|
+| Etiquetas: DFDC desde su `metadata.json`; FF++ manipulado = FAKE; DeeperForensics por carpeta `FAKE/REAL`; FakeAVCeleb por tipo | `DEV/code/add_labels.py:134-176` |
+| Subconjuntos: DeeperForensics `end_to_end` y `reenact_postprocess`; FakeAVCeleb `FakeVideo-RealAudio` y `RealVideo-RealAudio` | `dataset_unzip/code/unzip_deeperforensics.py` (`TARGET_CATEGORIES`) y `unzip_fakeavceleb.py` (`FOLDER_MAP`) |
+| Método de FakeAVCeleb (faceswap, fsgan, wav2lip) | columna `method` de `meta_data.csv` de FakeAVCeleb v1.2 |
+| `video_id` canónico y equivalencia con las rutas del estudio | `docs/provenance/export_dev_manifests.py` (`video_id_from_dev_output`) |
+
+### 2.3 Grafo de identidades y partición (`configs/data.yaml`)
+
+| Valor | Origen |
+|---|---|
+| `split.seed = 42`, `fractions = 0.80/0.10/0.10`, `pool_column = meets_the_clean_rules`, `force_dfd_blocks_apart = true` | `DEV/code/notebook_analisis_identidades.ipynb`, celda 2 |
+| `dfdc_granularity = part` | `DEV/src/tfm/data/samples.py:37` (`identity_split_dfdc_part.csv`, la que entrenó; el notebook marca `original` como primaria pero no es la que se usó) |
+| union-find, nodos por dataset | notebook, celda 8 |
+| greedy + refinamiento local, `max_passes = 40` | notebook, celda 12 |
+| `resize_bucket_edges`, `duration_bucket_edges` | `DEV/src/tfm/data/samples.py:58-79` |
+| `sample_id` por orden de la ruta del video procesado | `DEV/src/tfm/data/samples.py:317-326` → `sources.legacy_sort_key` |
+
+### 2.4 Manifiestos (`manifests/`)
+
+Generados con `docs/provenance/export_dev_manifests.py` desde
+`DEV/data/with_labels/manifest_all_datasets_with_labels.csv`,
+`DEV/analysis_outputs/identity_split/identity_split_dfdc_part.csv`,
+`DEV/data/training/samples.parquet` (fingerprint `d57973b4…6b12c748`) y los
+`metadata.json` de DFDC. El script verifica, antes de escribir, que el código de
+`janonet` reconstruye desde `preprocessing.csv.gz` **la misma partición, los mismos
+`group_id` y los mismos `sample_id`** en las 94 234 filas (29 columnas idénticas).
+
+Las filas de FakeAVCeleb (10 209 de preprocesamiento, 5 787 de la tabla maestra) se
+escriben en `manifests/local/`, fuera de git, porque los términos de uso de FakeAVCeleb
+prohíben distribuir datos derivados. Verificado que `01_build_manifest.py sources
+--datasets fakeavceleb` reproduce desde la descarga sus 10 209 `video_id`, etiquetas,
+métodos y posiciones de fila, y que `split --check --write-local` reconstruye la tabla
+completa idéntica.
+
+### 2.5 Paridad del preprocesamiento
+
+`tests/test_preprocess_parity.py` reprocesa 20 videos desde el original (estratificados
+por dataset y etiqueta, semilla 20261125; 11 downsample y 9 upsample) y compara los 32
+cuadros de la ventana con la caché del estudio:
+
+- **19 de 20 idénticos bit a bit**, incluido el clip central de 16 cuadros.
+- `sample_id` 8079 (original FF++ 718): máximo 6 niveles en 3 564 de 4 816 896 valores
+  (0,07 %), cuadros 20–26 de la ventana. Causa aislada: OpenCV 4.10/4.11 decodifica el
+  video de origen distinto a la 4.12 con la que se generó la caché → RetinaFace da una
+  caja desplazada 1 px en un cuadro → el recorte se propaga por el GOP de mp4v. Con
+  OpenCV 4.12 sale idéntico (con TensorFlow en CPU y en GPU). OpenCV 4.12 exige
+  numpy >= 2, incompatible con TensorFlow 2.10.
+- Las magnitudes del manifiesto (cuadros procesados, tamaños de caja y de recorte,
+  acción de redimensionado, contadores y veredicto de limpieza) coinciden en los 20.
+- Detalle por video: `outputs/parity_preprocess.json` (fuera de git).
