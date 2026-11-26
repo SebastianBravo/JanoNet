@@ -70,3 +70,11 @@ def test_pesos_presentes_verifican_y_cargan(name):
     assert all(v.dtype == torch.float32 for v in sd.values() if v.is_floating_point())
     build_model(load_config(name)["model"], pretrained=False).load_state_dict(sd, strict=True)
     assert load_model(name, p) is not None
+
+
+def test_urls_del_registro_apuntan_al_release():
+    reg = json.loads((paths.project_root() / "weights" / "registry.json").read_text(encoding="utf-8"))
+    base = reg["release"]["base_url"]
+    assert base == f"https://github.com/{reg['release']['repo']}/releases/download/{reg['release']['tag']}"
+    for m in reg["models"].values():
+        assert m["url"] == f"{base}/{m['file']}"

@@ -7,7 +7,7 @@
    A y B, escalera de operación por prevalencia, métricas de prueba, ``srm_stats``,
    versión y SHA256 de los pesos (``janonet.release``).
 3. Escribe ``weights/registry.json``: fichero, tamaño, SHA256, licencia y URL de
-   descarga de cada modelo (la URL queda vacía hasta que se elija dónde alojarlos).
+   descarga de cada modelo, en el GitHub Release ``v0.1.0`` del repositorio.
 
 Necesita las predicciones de referencia completas (con las filas locales de
 FakeAVCeleb) para que umbrales y métricas sean los del documento.
@@ -40,6 +40,10 @@ WEIGHTS_LICENSE = (
     "CC BY-NC 4.0 (sujeto a los términos de uso de DFDC, FaceForensics++, DeeperForensics-1.0 y FakeAVCeleb)"
 )
 OPTIONAL = {"e6"}
+#: Dónde se publican los pesos (GitHub Release del repositorio).
+RELEASE_REPO = "SebastianBravo/JanoNet"
+RELEASE_TAG = "v0.1.0"
+RELEASE_BASE_URL = f"https://github.com/{RELEASE_REPO}/releases/download/{RELEASE_TAG}"
 
 
 def sha256(path: Path) -> str:
@@ -98,7 +102,7 @@ def main() -> int:
         card = model_card(st, cfg["meta"]["study_config"], name, {**cfg["model"], "meta": cfg["meta"]}, srm, weights)
         (rdir / f"{name}.json").write_text(json.dumps(card, indent=1, ensure_ascii=False), encoding="utf-8")
         registry[name] = {k: weights[k] for k in ("file", "bytes", "sha256", "license", "optional")}
-        registry[name]["url"] = ""
+        registry[name]["url"] = f"{RELEASE_BASE_URL}/{out.name}"
         print(
             f"{name}: {out.stat().st_size / 1e6:.1f} MB, sha256 {weights['sha256'][:16]}…, "
             f"A {card['thresholds']['A']:.6f}, B {card['thresholds']['B']:.6f}"
