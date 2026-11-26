@@ -1,0 +1,56 @@
+# RS-ca-tr — JanoNet completo: RGB (100 % entrenable) + SRM, atención cruzada
+# bidireccional y Transformer temporal.
+# Valores copiados de runs/rgb/RS-ca-tr-s20260910/config.yaml (config resuelta que corrió).
+# Ver PROVENANCE.md.
+meta:
+  name: rs_ca_tr
+  display_name: "JanoNet completo (RS-ca-tr)"
+  source_run: RS-ca-tr-s20260910
+  official_score: prob_video      # temporal: transformer -> salida por video
+
+model:
+  branches: [rgb, srm]
+  fusion: cross_attention
+  temporal: transformer
+  rgb:
+    pretrained: true
+    freeze_until: null
+  srm:
+    pretrained: true
+    stem_stride: 2
+    use_maxpool: true
+    grid_adjust: stride
+    padding_mode: replicate
+  fusion_params:
+    d_model: 256
+    n_heads: 8
+    dropout: 0.0
+  transformer:
+    d_model: 256
+    n_layers: 2
+    n_heads: 8
+    dim_feedforward: null         # 4 x d_model = 1024
+    dropout: 0.1
+    pos_encoding: learned
+    pool: mean
+    max_len: 64
+
+train:
+  epochs: 10
+  batch_size: 8
+  accum_steps: 4
+  lr: 0.0001
+  weight_decay: 0.0001
+  amp: true
+  seed: 20260910
+  temporal_stride: 1
+  pos_weight_alpha: 1.0
+  num_workers: 4
+  prefetch_factor: 4
+  persistent_workers: true
+  pin_memory: true
+  cudnn_benchmark: true
+  deterministic: false
+  checkpoint_every_n_steps: 500
+  log_every_n_steps: 50
+  train_eval_subset: 9000

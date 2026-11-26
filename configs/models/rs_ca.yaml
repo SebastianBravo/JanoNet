@@ -1,0 +1,46 @@
+# RS-ca — RGB (100 % entrenable) + SRM, atención cruzada bidireccional y módulo de media.
+# Valores copiados de runs/rgb/RS-ca-s20260910/config.yaml (config resuelta que corrió).
+# Ver PROVENANCE.md.
+meta:
+  name: rs_ca
+  display_name: "RGB+SRM atención (RS-ca)"
+  source_run: RS-ca-s20260910
+  official_score: prob_mean
+
+model:
+  branches: [rgb, srm]
+  fusion: cross_attention
+  temporal: mean
+  rgb:
+    pretrained: true
+    freeze_until: null
+  srm:
+    pretrained: true
+    stem_stride: 2
+    use_maxpool: true
+    grid_adjust: stride
+    padding_mode: replicate       # debe coincidir con configs/srm_stats.json
+  fusion_params:
+    d_model: 256
+    n_heads: 8
+    dropout: 0.0
+
+train:
+  epochs: 10
+  batch_size: 8
+  accum_steps: 4                  # lote efectivo 32 (batch 16 rozaba los 16 GB de la V100)
+  lr: 0.0001
+  weight_decay: 0.0001
+  amp: true
+  seed: 20260910
+  temporal_stride: 1
+  pos_weight_alpha: 1.0
+  num_workers: 4
+  prefetch_factor: 4
+  persistent_workers: true
+  pin_memory: true
+  cudnn_benchmark: true
+  deterministic: false
+  checkpoint_every_n_steps: 500
+  log_every_n_steps: 50
+  train_eval_subset: 9000

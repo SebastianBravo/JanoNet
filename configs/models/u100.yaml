@@ -1,0 +1,38 @@
+# U100 — rama RGB sola (EfficientNet-B0 100 % entrenable) con módulo de media.
+# Valores copiados de runs/rgb/U100-s20260910/config.yaml (config resuelta que corrió).
+# Ver PROVENANCE.md.
+meta:
+  name: u100
+  display_name: "RGB sola (U100)"
+  source_run: U100-s20260910
+  official_score: prob_mean       # temporal: mean -> media de las 16 probabilidades
+
+model:
+  branches: [rgb]
+  fusion: none
+  temporal: mean
+  rgb:
+    pretrained: true              # ImageNet al entrenar; se ignora al cargar un checkpoint
+    freeze_until: null            # 100 % entrenable
+
+train:
+  # Experimentales (definen el modelo entrenado)
+  epochs: 10
+  batch_size: 16
+  accum_steps: 2                  # lote efectivo 32
+  lr: 0.0001
+  weight_decay: 0.0001
+  amp: true
+  seed: 20260910
+  temporal_stride: 1
+  pos_weight_alpha: 1.0           # pos_weight = 1.0 x n_REAL/n_FAKE de train
+  # Operativos (no cambian el resultado esperado)
+  num_workers: 4                  # en el HPC se usaron 16
+  prefetch_factor: 4
+  persistent_workers: true
+  pin_memory: true
+  cudnn_benchmark: true
+  deterministic: false
+  checkpoint_every_n_steps: 500
+  log_every_n_steps: 50
+  train_eval_subset: 9000

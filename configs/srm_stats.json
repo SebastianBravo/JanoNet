@@ -1,0 +1,47 @@
+{
+  "mean": [
+    1.223283511674764e-11,
+    8.07076075113187e-08,
+    -3.939207396556134e-11
+  ],
+  "std": [
+    0.010555594823732474,
+    0.01188797269831648,
+    0.02473209521271492
+  ],
+  "n_kernels": 3,
+  "input_range": "[0,1] (uint8/255), sin normalizacion ImageNet",
+  "padding_mode": "replicate",
+  "timestamp": "2026-08-14T20:38:20+00:00",
+  "git_sha": "3cfbc6ce86377c91e4397aabd32ac8bd88c37607",
+  "n_videos": 2000,
+  "n_frames": 8000,
+  "n_frames_per_video": 4,
+  "frame_indices_in_center_window": [
+    0,
+    5,
+    10,
+    15
+  ],
+  "n_pixels_per_channel": 401408000,
+  "seed": 20260812,
+  "split": "train",
+  "samples_fingerprint": "d57973b4328fe8e1a884d8a2ead7b6318c11e42ecf42cfef1f76e5f11b12c748",
+  "convergence_check": {
+    "seed_check": 1337,
+    "overlap_videos": 58,
+    "max_std_rel_diff": 0.011389296311493718,
+    "max_mean_shift_in_std": 1.0414190081776702e-07,
+    "mean_check": [
+      1.2256426875679533e-11,
+      7.946957143764631e-08,
+      -3.889902343092087e-11
+    ],
+    "std_check": [
+      0.010540109967025174,
+      0.011905605413623354,
+      0.024450414051933236
+    ],
+    "passed": true
+  }
+}

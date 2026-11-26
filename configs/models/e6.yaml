@@ -1,0 +1,59 @@
+# E6 — variante de poca memoria (descarga opcional): RGB congelada hasta features.7
+# (entrena el 10,3 % de la EfficientNet-B0: solo la conv 1x1 final) + SRM, atención
+# cruzada y Transformer temporal.
+# Valores copiados de runs/E6-seed20260910/config.yaml (config resuelta que corrió).
+# Su puntaje oficial es prob_video; los resultados se publicaron originalmente con
+# prob_mean y se reinfirieron (export_resultados/runs_reinferidos/E6-seed20260910).
+# Ver PROVENANCE.md.
+meta:
+  name: e6
+  display_name: "E6 (RGB congelada al 10,3 %)"
+  source_run: E6-seed20260910
+  official_score: prob_video
+
+model:
+  branches: [rgb, srm]
+  fusion: cross_attention
+  temporal: transformer
+  rgb:
+    pretrained: true
+    freeze_until: features.7
+  srm:
+    pretrained: true
+    stem_stride: 2
+    use_maxpool: true
+    grid_adjust: stride
+    padding_mode: replicate
+  fusion_params:
+    d_model: 256
+    n_heads: 8
+    dropout: 0.0
+  transformer:
+    d_model: 256
+    n_layers: 2
+    n_heads: 8
+    dim_feedforward: null
+    dropout: 0.1
+    pos_encoding: learned
+    pool: mean
+    max_len: 64
+
+train:
+  epochs: 20
+  batch_size: 32
+  accum_steps: 1
+  lr: 0.0001
+  weight_decay: 0.0001
+  amp: true
+  seed: 20260910
+  temporal_stride: 1
+  pos_weight_alpha: 1.0           # E6 corrió antes de existir la clave; su pos_weight fue n_REAL/n_FAKE
+  num_workers: 4
+  prefetch_factor: 4
+  persistent_workers: true
+  pin_memory: true
+  cudnn_benchmark: true
+  deterministic: false
+  checkpoint_every_n_steps: 500
+  log_every_n_steps: 50
+  train_eval_subset: 9000

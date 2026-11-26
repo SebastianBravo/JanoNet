@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "janonet"
+version = "0.1.0"
+description = "JanoNet: RGB-SRM cross-attention face-swap deepfake detector evaluated under realistic class prevalence"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Juan S. Bravo" }]
+# Python 3.10 es obligatorio: TensorFlow 2.10 (RetinaFace) no existe para 3.11+.
+requires-python = ">=3.10,<3.11"
+# Versiones fijadas. numpy < 2 lo impone TensorFlow 2.10, que es el detector de
+# rostros con el que se generó el dataset (paridad del preprocesamiento).
+# torch 2.1.2 / torchvision 0.16.2 son las versiones con las que se entrenaron
+# los modelos finales (run_manifest.json -> torch_version, torchvision_version).
+dependencies = [
+    "numpy==1.26.4",
+    "torch==2.1.2",
+    "torchvision==0.16.2",
+    "pyyaml==6.0.2",
+    "pandas==2.2.3",
+    "pyarrow==17.0.0",
+    "scipy==1.13.1",
+    "scikit-learn==1.5.2",
+    "opencv-python==4.10.0.84",
+]
+
+[project.optional-dependencies]
+# Detección de rostros (RetinaFace sobre TensorFlow) y reglas de limpieza.
+preprocess = [
+    "tensorflow==2.10.1",
+    "retina-face==0.0.17",
+    "protobuf==3.19.6",
+    "tqdm==4.67.1",
+]
+train = [
+    "tqdm==4.67.1",
+]
+app = [
+    "janonet[preprocess]",
+    # 1.22.0 es la última versión de Streamlit compatible con protobuf 3.19.6,
+    # que a su vez exige TensorFlow 2.10 (RetinaFace).
+    "streamlit==1.22.0",
+    "matplotlib==3.9.2",
+]
+dev = [
+    "pytest==8.3.3",
+    "ruff==0.7.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "dev_parity: compara contra el repositorio de desarrollo (necesita JANONET_DEV_REPO)",
+    "checkpoints: carga los checkpoints reales (necesita JANONET_DEV_CHECKPOINTS o weights/)",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["src", "tests", "scripts", "app"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["UP038"]  # isinstance(x, (A, B)) es más legible y la regla está obsoleta en ruff

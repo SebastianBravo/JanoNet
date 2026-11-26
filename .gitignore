@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+.venv/
+.ipynb_checkpoints/
+
+# Pesos y checkpoints: nunca en git (se descargan con scripts/download_weights.py)
+weights/*
+!weights/README.md
+*.ckpt
+*.pt
+*.pth
+*.h5
+
+# Datos y medios: solo manifiestos sin medios van en git
+data/
+cache/
+outputs/
+runs/
+*.bin
+*.parquet
+examples/*
+!examples/README.md
+# El video real propio queda fuera de git hasta que el autor lo agregue
+examples/real_propio.mp4
+
+# Material del documento que no se versiona
+Documento_*.docx
+analisis_documento_JanoNet.zip
+docs/img/figuras_JanoNet.zip
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

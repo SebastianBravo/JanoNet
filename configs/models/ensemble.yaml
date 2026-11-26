@@ -1,0 +1,12 @@
+# Ensamble U100 + RS-ca-tr: media de los logits oficiales, sin entrenamiento.
+# logit_ens = mean(logit(clip(score_i, eps, 1 - eps))), score_ens = sigmoid(logit_ens)
+# Reproduce el AP REAL de prueba del documento (0,897). Ver PROVENANCE.md.
+meta:
+  name: ensemble
+  display_name: "Ensamble RGB sola + completo"
+  official_score: prob_ensemble
+
+ensemble:
+  members: [u100, rs_ca_tr]
+  combine: mean_logit
+  eps: 1.0e-6
