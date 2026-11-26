@@ -1,8 +1,7 @@
 # Atajos para Linux/macOS. En Windows: tasks.ps1 (mismos nombres).
-# La tarea app se añade en la Fase 6.
 PY ?= python
 
-.PHONY: setup test test-all lint format sources faces split cache favc train predict eval
+.PHONY: setup test test-all lint format sources faces split cache favc train predict eval weights app
 
 setup:
 	$(PY) -m pip install -e ".[preprocess,train,dev]"
@@ -16,10 +15,10 @@ test-all:
 	$(PY) -m pytest -q -rs
 
 lint:
-	$(PY) -m ruff check src tests scripts docs
+	$(PY) -m ruff check src tests scripts docs app
 
 format:
-	$(PY) -m ruff format src tests scripts docs
+	$(PY) -m ruff format src tests scripts docs app
 
 # Datos (ver DATA.md). Rutas por variables de entorno JANONET_*.
 sources:
@@ -52,3 +51,10 @@ predict:
 
 eval:
 	$(PY) scripts/05_evaluate.py --out outputs/evaluation --compare
+
+# Pesos y demo (Fases 5 y 6)
+weights:
+	$(PY) scripts/download_weights.py
+
+app:
+	$(PY) -m streamlit run app/streamlit_app.py

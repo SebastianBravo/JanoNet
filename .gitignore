@@ -31,6 +31,8 @@ reference/local/
 *.parquet
 examples/*
 !examples/README.md
+!examples/examples.json
+!examples/deeperforensics_*.mp4
 # El video real propio queda fuera de git hasta que el autor lo agregue
 examples/real_propio.mp4
 

@@ -1,6 +1,5 @@
 # Equivalente de Makefile para Windows PowerShell.
-# Uso:  .\tasks.ps1 setup | test | test-all | lint | format | sources | faces | split | cache | favc | train [-Model rs_ca_tr] | predict | eval
-# La tarea app se añade en la Fase 6.
+# Uso:  .\tasks.ps1 setup | test | test-all | lint | format | sources | faces | split | cache | favc | train [-Model rs_ca_tr] | predict | eval | weights | app
 param([Parameter(Position = 0)][string]$Task = "help", [string]$Model = "rs_ca_tr")
 
 $ErrorActionPreference = "Stop"
@@ -10,8 +9,8 @@ switch ($Task) {
     "setup"    { & $py -m pip install -e ".[preprocess,train,dev]" }
     "test"     { & $py -m pytest -q -m "not slow" }
     "test-all" { & $py -m pytest -q -rs }
-    "lint"     { & $py -m ruff check src tests scripts docs }
-    "format"   { & $py -m ruff format src tests scripts docs }
+    "lint"     { & $py -m ruff check src tests scripts docs app }
+    "format"   { & $py -m ruff format src tests scripts docs app }
     "sources"  { & $py scripts/01_build_manifest.py sources }
     "faces"    { & $py scripts/02_preprocess.py faces }
     "split"    { & $py scripts/01_build_manifest.py split --check }
@@ -24,6 +23,8 @@ switch ($Task) {
     "train"    { & $py scripts/03_train.py --model $Model --run-dir "runs/$Model" }
     "predict"  { & $py scripts/04_predict_split.py --models u100 rs_ca rs_ca_tr ensemble --split test --out outputs/predictions_test.csv }
     "eval"     { & $py scripts/05_evaluate.py --out outputs/evaluation --compare }
-    default    { Write-Host "Tareas: setup, test, test-all, lint, format, sources, faces, split, cache, favc, train, predict, eval" }
+    "weights"  { & $py scripts/download_weights.py }
+    "app"      { & $py -m streamlit run app/streamlit_app.py }
+    default    { Write-Host "Tareas: setup, test, test-all, lint, format, sources, faces, split, cache, favc, train, predict, eval, weights, app" }
 }
 exit $LASTEXITCODE

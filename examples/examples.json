@@ -1,0 +1,54 @@
+{
+ "examples": [
+  {
+   "file": "deeperforensics_end_to_end_001_W101.mp4",
+   "label": "FAKE",
+   "dataset": "DeeperForensics-1.0",
+   "video_id": "deeperforensics/manipulated_videos/end_to_end/001_W101.mp4",
+   "split": "test",
+   "citation": "L. Jiang, R. Li, W. Wu, C. Qian y C. C. Loy, \"DeeperForensics-1.0: A Large-Scale Dataset for Real-World Face Forgery Detection\", CVPR 2020.",
+   "note": "Video falso de DeeperForensics-1.0 (end_to_end): la cara es la del actor fuente W101; el fondo, el cuerpo y los rótulos provienen del video original 001 de FaceForensics++ (c23).",
+   "terms": "Uso no comercial de investigación, sujeto a los términos de uso de DeeperForensics-1.0 (https://github.com/EndlessSora/DeeperForensics-1.0)."
+  },
+  {
+   "file": "deeperforensics_end_to_end_100_M121.mp4",
+   "label": "FAKE",
+   "dataset": "DeeperForensics-1.0",
+   "video_id": "deeperforensics/manipulated_videos/end_to_end/100_M121.mp4",
+   "split": "test",
+   "citation": "L. Jiang, R. Li, W. Wu, C. Qian y C. C. Loy, \"DeeperForensics-1.0: A Large-Scale Dataset for Real-World Face Forgery Detection\", CVPR 2020.",
+   "note": "Video falso de DeeperForensics-1.0 (end_to_end): la cara es la del actor fuente M121; el fondo, el cuerpo y los rótulos provienen del video original 100 de FaceForensics++ (c23).",
+   "terms": "Uso no comercial de investigación, sujeto a los términos de uso de DeeperForensics-1.0 (https://github.com/EndlessSora/DeeperForensics-1.0)."
+  },
+  {
+   "file": "deeperforensics_end_to_end_117_W132.mp4",
+   "label": "FAKE",
+   "dataset": "DeeperForensics-1.0",
+   "video_id": "deeperforensics/manipulated_videos/end_to_end/117_W132.mp4",
+   "split": "test",
+   "citation": "L. Jiang, R. Li, W. Wu, C. Qian y C. C. Loy, \"DeeperForensics-1.0: A Large-Scale Dataset for Real-World Face Forgery Detection\", CVPR 2020.",
+   "note": "Video falso de DeeperForensics-1.0 (end_to_end): la cara es la del actor fuente W132; el fondo, el cuerpo y los rótulos provienen del video original 117 de FaceForensics++ (c23).",
+   "terms": "Uso no comercial de investigación, sujeto a los términos de uso de DeeperForensics-1.0 (https://github.com/EndlessSora/DeeperForensics-1.0)."
+  },
+  {
+   "file": "deeperforensics_end_to_end_017_W006.mp4",
+   "label": "FAKE",
+   "dataset": "DeeperForensics-1.0",
+   "video_id": "deeperforensics/manipulated_videos/end_to_end/017_W006.mp4",
+   "split": "val",
+   "citation": "L. Jiang, R. Li, W. Wu, C. Qian y C. C. Loy, \"DeeperForensics-1.0: A Large-Scale Dataset for Real-World Face Forgery Detection\", CVPR 2020.",
+   "note": "Video falso de DeeperForensics-1.0 (end_to_end): la cara es la del actor fuente W006; el fondo, el cuerpo y los rótulos provienen del video original 017 de FaceForensics++ (c23).",
+   "terms": "Uso no comercial de investigación, sujeto a los términos de uso de DeeperForensics-1.0 (https://github.com/EndlessSora/DeeperForensics-1.0)."
+  },
+  {
+   "file": "real_propio.mp4",
+   "label": "REAL",
+   "dataset": "propio",
+   "video_id": null,
+   "split": null,
+   "citation": null,
+   "note": "Video real grabado por el autor (se agrega más adelante).",
+   "terms": null
+  }
+ ]
+}

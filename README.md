@@ -2,6 +2,29 @@
 
 > README en construcción (se completa en la Fase 7). Secciones ya redactadas abajo.
 
+## Demo
+
+```bash
+python scripts/download_weights.py
+streamlit run app/streamlit_app.py
+```
+
+<img src="docs/img/demo_streamlit.png" width="800" alt="Demo de JanoNet en Streamlit">
+
+*La demo con un ejemplo de DeeperForensics-1.0 (Jiang et al., CVPR 2020): puntajes y
+decisión de cada modelo en el punto de operación elegido, y el paso a paso del
+preprocesamiento y de la rama SRM.*
+
+Se elige un video de `examples/` o se sube uno; el objetivo del negocio (máxima
+detección, presupuesto de fricción de 3 a 10, recall mínimo o compromiso) y la
+prevalencia esperada (0,5 % a 10 %) fijan el umbral de cada modelo en su escalera de
+operación. Si el video no tiene un único rostro de frente, la demo responde «no
+procesable, solicitar recaptura». Corre en CPU: en Windows (i7-6700) un video de 15–20 s
+tarda **2,5–4,5 min la primera vez**, casi todo en la detección de rostros (RetinaFace
+sobre TensorFlow, ≈ 2 s por detección en 720p, cada 5 cuadros); los tres modelos suman
+≈ 2,5 s. El resultado se guarda por contenido en `outputs/demo_cache/` y las siguientes
+veces es inmediato.
+
 ## Reentrenar
 
 Cada modelo se entrena con su config (`configs/models/<modelo>.yaml`, sección `train`):

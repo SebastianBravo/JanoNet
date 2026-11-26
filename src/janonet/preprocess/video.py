@@ -119,8 +119,12 @@ def preprocess_video(
     detector=None,
     cfg: dict[str, Any] | None = None,
     keep_detections: bool = False,
+    progress=None,
 ) -> PreprocessResult:
-    """Procesa un video y escribe el video de rostro 224x224 en ``output_path``."""
+    """Procesa un video y escribe el video de rostro 224x224 en ``output_path``.
+
+    ``progress(cuadro, total)``, si se da, se llama tras cada detección (para la demo).
+    """
     from janonet.preprocess.detect import FaceDetector
 
     cfg = cfg or load_preprocess_config()
@@ -168,6 +172,8 @@ def preprocess_video(
             if frame_idx % int(det_cfg["detect_every"]) == 0 or last_lmk is None:
                 found = detector.detect_faces(frame, min_face_size=int(det_cfg["min_face_size"]))
                 c["checked_frames"] += 1
+                if progress is not None:
+                    progress(frame_idx, num_frames)
                 total_faces += len(found)
                 max_faces = max(max_faces, len(found))
                 if keep_detections:

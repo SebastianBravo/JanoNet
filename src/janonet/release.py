@@ -118,3 +118,43 @@ def model_card(
         "test_metrics": test_metrics(st, cfg),
         "weights": weights,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Lectura de las fichas (demo y predicción de un video)
+# ─────────────────────────────────────────────────────────────────────────────
+
+OBJECTIVES = ("max_detection", "friction", "recall", "compromise")
+
+
+def load_card(name: str) -> dict[str, Any]:
+    import json
+
+    from janonet import paths
+
+    return json.loads((paths.configs_dir() / "release" / f"{name}.json").read_text(encoding="utf-8"))
+
+
+def pick_operating_point(card: dict[str, Any], pi: float, objective: str, value: float | None = None) -> dict[str, Any]:
+    """Punto de la escalera según el objetivo del negocio.
+
+    - ``max_detection``: recall objetivo 0,95 (el mayor de la escalera);
+    - ``friction``: fricción objetivo ``value`` (3–10) a la prevalencia ``pi``;
+    - ``recall``: recall objetivo ``value`` (0,80–0,95);
+    - ``compromise``: fricción objetivo 5 a ``pi`` (el umbral B cuando ``pi = 0,02``).
+    """
+    pts = card["operating_points"][f"{pi:g}"]
+    if objective == "max_detection":
+        tipo, target = "recall", 0.95
+    elif objective == "friction":
+        tipo, target = "fric", float(value)
+    elif objective == "recall":
+        tipo, target = "recall", float(value)
+    elif objective == "compromise":
+        tipo, target = "fric", 5.0
+    else:
+        raise ValueError(f"objetivo desconocido {objective!r}; válidos: {OBJECTIVES}")
+    for p in pts:
+        if p["tipo"] == tipo and abs(p["objetivo"] - target) < 1e-9:
+            return p
+    raise ValueError(f"no hay punto {tipo}={target} para pi={pi}")
