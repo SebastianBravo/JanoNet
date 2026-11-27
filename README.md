@@ -265,21 +265,41 @@ Python **3.10** (TensorFlow 2.10, que usa RetinaFace, no existe para 3.11+). Con
 ```bash
 conda create -n janonet python=3.10 -y
 conda activate janonet
-
-pip install -e ".[app]"                      # modelos + RetinaFace + demo
-pip install -e ".[preprocess,train,dev]"     # todo lo demás: datos, entrenamiento, tests
 ```
 
-En Linux y macOS hay atajos en el `Makefile`; en Windows, los mismos en `tasks.ps1`
-(`make test` ≡ `.\tasks.ps1 test`). `requirements-lock-win-cpu.txt` es el entorno
-completo verificado en Windows (CPU). Para entrenar en GPU, instala antes el
+Luego, según lo que se vaya a usar:
+
+```bash
+# Modelos + RetinaFace + demo
+pip install -e ".[app]"
+
+# Todo: datos, entrenamiento y tests (incluye RetinaFace)
+pip install -e ".[preprocess,train,dev]"
+```
+
+**macOS con Apple Silicon (M1–M4).** PyPI no tiene `tensorflow==2.10.1` para arm64: el
+extra instala en su lugar `tensorflow-macos==2.10.0`, la misma versión de TensorFlow
+compilada por Apple. Como `retina-face` declara la dependencia con el nombre
+`tensorflow`, hay que instalarlo aparte, sin dependencias, después de cualquiera de los
+comandos anteriores (`make setup` y `make setup-app` lo hacen solos):
+
+```bash
+pip install --no-deps retina-face==0.0.17
+```
+
+`pip check` avisará que `retina-face` pide `tensorflow`; es esperado. El ejemplo
+`100_M121` reproduce en un Mac M-series los puntajes del estudio (`tests/test_demo.py`).
+
+En Linux y macOS hay atajos en el `Makefile` (`make setup`, `make setup-app`); en
+Windows, los mismos en `tasks.ps1` (`make test` ≡ `.\tasks.ps1 test`).
+`requirements-lock-win-cpu.txt` es el entorno completo verificado en Windows (CPU). Para entrenar en GPU, instala antes el
 `torch==2.1.2` con CUDA de <https://pytorch.org/get-started/previous-versions/>.
 
 ## Inicio rápido
 
 ```bash
-# 1. Pesos (GitHub Release v0.1.0, verificados por SHA256)
-python scripts/download_weights.py            # u100, rs_ca, rs_ca_tr (≈ 150 MB)
+# 1. Pesos: u100, rs_ca, rs_ca_tr (≈ 150 MB, GitHub Release v0.1.0, verificados por SHA256)
+python scripts/download_weights.py
 
 # 2. Predecir un video
 python scripts/predict.py examples/deeperforensics_end_to_end_100_M121.mp4
@@ -350,7 +370,8 @@ bootstrap por video y por grupo, cortes por segmento y ensamble) salen de las
 predicciones por video del estudio, versionadas en `reference/predictions.csv.gz`:
 
 ```bash
-python scripts/05_evaluate.py --out outputs/evaluation --compare      # make eval / .\tasks.ps1 eval
+# Equivale a: make eval  /  .\tasks.ps1 eval
+python scripts/05_evaluate.py --out outputs/evaluation --compare
 ```
 
 Con `--compare` imprime la diferencia máxima frente a cada CSV del documento
@@ -381,10 +402,14 @@ términos en [`DATA.md`](DATA.md)) y apuntar `JANONET_DATA` (o una variable por 
 ellos. Los manifiestos de `manifests/` fijan la partición y los `sample_id` del estudio:
 
 ```bash
-python scripts/01_build_manifest.py sources          # inventario de los videos
-python scripts/02_preprocess.py faces                # RetinaFace + limpieza + recorte -> processed/
-python scripts/01_build_manifest.py split --check    # reconstruye la partición y la compara con la publicada
-python scripts/02_preprocess.py cache                # 32 cuadros por video -> frames_cache/ (≈ 423 GB)
+# Inventario de los videos
+python scripts/01_build_manifest.py sources
+# RetinaFace + limpieza + recorte -> processed/
+python scripts/02_preprocess.py faces
+# Reconstruye la partición y la compara con la publicada
+python scripts/01_build_manifest.py split --check
+# 32 cuadros por video -> frames_cache/ (≈ 423 GB)
+python scripts/02_preprocess.py cache
 ```
 
 El preprocesamiento reproduce el del estudio cuadro a cuadro en 19 de 20 videos de la

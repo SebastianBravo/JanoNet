@@ -1,10 +1,25 @@
 # Atajos para Linux/macOS. En Windows: tasks.ps1 (mismos nombres).
 PY ?= python
 
-.PHONY: setup test test-all lint format sources faces split cache favc train predict eval weights app
+.PHONY: setup setup-app test test-all lint format sources faces split cache favc train predict eval weights app
+
+# En macOS con Apple Silicon, retina-face se instala sin dependencias: pide el paquete
+# "tensorflow", que ahí no existe en 2.10 (se usa tensorflow-macos 2.10.0; ver pyproject.toml).
+PLATFORM := $(shell $(PY) -c "import platform, sys; print(sys.platform + '-' + platform.machine())")
+ifeq ($(PLATFORM),darwin-arm64)
+RETINAFACE_MACOS = $(PY) -m pip install --no-deps retina-face==0.0.17
+else
+RETINAFACE_MACOS = @true
+endif
 
 setup:
 	$(PY) -m pip install -e ".[preprocess,train,dev]"
+	$(RETINAFACE_MACOS)
+
+# Solo lo necesario para la demo y scripts/predict.py.
+setup-app:
+	$(PY) -m pip install -e ".[app]"
+	$(RETINAFACE_MACOS)
 
 test:
 	$(PY) -m pytest -q -m "not slow"

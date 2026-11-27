@@ -1,5 +1,5 @@
 # Equivalente de Makefile para Windows PowerShell.
-# Uso:  .\tasks.ps1 setup | test | test-all | lint | format | sources | faces | split | cache | favc | train [-Model rs_ca_tr] | predict | eval | weights | app
+# Uso:  .\tasks.ps1 setup | setup-app | test | test-all | lint | format | sources | faces | split | cache | favc | train [-Model rs_ca_tr] | predict | eval | weights | app
 param([Parameter(Position = 0)][string]$Task = "help", [string]$Model = "rs_ca_tr")
 
 $ErrorActionPreference = "Stop"
@@ -7,6 +7,7 @@ $py = if ($env:PYTHON) { $env:PYTHON } else { "python" }
 
 switch ($Task) {
     "setup"    { & $py -m pip install -e ".[preprocess,train,dev]" }
+    "setup-app" { & $py -m pip install -e ".[app]" }
     "test"     { & $py -m pytest -q -m "not slow" }
     "test-all" { & $py -m pytest -q -rs }
     "lint"     { & $py -m ruff check src tests scripts docs app }
@@ -25,6 +26,6 @@ switch ($Task) {
     "eval"     { & $py scripts/05_evaluate.py --out outputs/evaluation --compare }
     "weights"  { & $py scripts/download_weights.py }
     "app"      { & $py -m streamlit run app/streamlit_app.py }
-    default    { Write-Host "Tareas: setup, test, test-all, lint, format, sources, faces, split, cache, favc, train, predict, eval, weights, app" }
+    default    { Write-Host "Tareas: setup, setup-app, test, test-all, lint, format, sources, faces, split, cache, favc, train, predict, eval, weights, app" }
 }
 exit $LASTEXITCODE

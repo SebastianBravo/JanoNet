@@ -28,9 +28,17 @@ dependencies = [
 
 [project.optional-dependencies]
 # Detección de rostros (RetinaFace sobre TensorFlow) y reglas de limpieza.
+# En macOS con Apple Silicon no hay rueda de tensorflow 2.10 en PyPI: la 2.10 para arm64
+# se publicó como tensorflow-macos 2.10.0. retina-face declara la dependencia con el nombre
+# "tensorflow" (que en arm64 solo existe desde la 2.13, incompatible con protobuf 3.19),
+# así que ahí se instala aparte con `pip install --no-deps retina-face==0.0.17`
+# (`make setup` lo hace solo) y sus otras dependencias van aquí.
 preprocess = [
-    "tensorflow==2.10.1",
-    "retina-face==0.0.17",
+    "tensorflow==2.10.1; sys_platform != 'darwin' or platform_machine != 'arm64'",
+    "retina-face==0.0.17; sys_platform != 'darwin' or platform_machine != 'arm64'",
+    "tensorflow-macos==2.10.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "gdown>=3.10.1; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "pillow>=5.2.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "protobuf==3.19.6",
 ]
 # El entrenamiento no necesita nada fuera de las dependencias base; el extra se mantiene

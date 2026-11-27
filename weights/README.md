@@ -3,8 +3,10 @@
 Aquí van los pesos de los modelos (fuera de git). Se descargan y verifican con:
 
 ```bash
-python scripts/download_weights.py          # u100, rs_ca y rs_ca_tr
-python scripts/download_weights.py --all    # también e6 (opcional)
+# u100, rs_ca y rs_ca_tr
+python scripts/download_weights.py
+# También e6 (opcional)
+python scripts/download_weights.py --all
 ```
 
 `registry.json` (en git) lista cada fichero con su tamaño, SHA256, licencia y URL. Los

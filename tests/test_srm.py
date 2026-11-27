@@ -16,8 +16,9 @@ from janonet.models import srm as S
 #: código original (dataset_analysis/src/tfm/data/srm.py, commit edce201).
 SHA_KERNELS_ORIGINAL = "169ad62a72a05be3f2570110af6c1bcd1790c2386c5676ab4783e03b18f5e967"
 SHA_BANK_ORIGINAL = "bafd5e9cfdc334bdd2c4294ea21976401512eb29654c8243b9f2ef330bf72092"
-#: SHA256 de dataset_analysis/data/training/srm_stats.json.
-SHA_STATS_ORIGINAL = "f5dd98bd64995d1b2b395dfeaf356f866dd1c049e6d384a427a66d55751bfd37"
+#: SHA256 de dataset_analysis/data/training/srm_stats.json con finales de línea LF. El
+#: original (Windows) tiene CRLF y da f5dd98bd...51bfd37; .gitattributes lo guarda en LF.
+SHA_STATS_ORIGINAL = "8e627f092290df457dfce9412fb1736e306717dd411ab0e1f7357da0fa6c30f4"
 
 
 def test_kernels_identicos_al_original_por_hash():
@@ -56,7 +57,8 @@ def test_residuo_de_imagen_plana_es_cero_con_replicate():
 
 def test_estadisticas_identicas_al_original():
     p = paths.srm_stats_path()
-    assert hashlib.sha256(p.read_bytes()).hexdigest() == SHA_STATS_ORIGINAL
+    # Normaliza CRLF -> LF: una copia de trabajo con CRLF (Windows) también debe pasar.
+    assert hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest() == SHA_STATS_ORIGINAL
     st = S.load_srm_stats(p)
     assert st["padding_mode"] == "replicate"
 

@@ -24,7 +24,10 @@ class FaceDetector:
             import tensorflow as tf
             from retinaface import RetinaFace
         except ImportError as exc:  # pragma: no cover - depende del entorno
-            raise ImportError('Falta el extra de preprocesamiento: pip install -e ".[preprocess]"') from exc
+            raise ImportError(
+                'Falta el extra de preprocesamiento: pip install -e ".[preprocess]" '
+                "(en macOS con Apple Silicon, además: pip install --no-deps retina-face==0.0.17)"
+            ) from exc
         for gpu in tf.config.list_physical_devices("GPU"):
             try:
                 tf.config.experimental.set_memory_growth(gpu, True)
